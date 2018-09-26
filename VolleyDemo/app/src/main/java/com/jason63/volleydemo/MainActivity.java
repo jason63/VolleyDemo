@@ -32,38 +32,49 @@ public class MainActivity extends AppCompatActivity {
 //            = {"https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2406624993.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p792381411.webp" , "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2377449669.webp" , "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2462245619.webp" , "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2111252759.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2529365085.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2203693875.webp" , "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2197680919.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p1382118133.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2233971046.webp" , "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p1947152148.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2425658570.webp" , "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2454473678.webp" , "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2187194609.webp" , "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p1031772057.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2225808366.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2328680655.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2512123434.webp" , "https://img3.doubanio.com/view/photo/s_ratio_poster/public/p2517753454.webp" , "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2516578307.webp"
 //    } ;
     String[] str = new String[25] ;
+    String[] quote = new String[25] ;
     PicAdapter adapter ;
-    ArrayList<Item> itemList = new ArrayList<>();
+    ArrayList<Item> itemList ;
+    int start ;
+    int count = 1 ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getData();
-
+        itemList = new ArrayList<>() ;
+        RequestQueue rq = Volley.newRequestQueue(this) ;
+        for(start = 0; start< 249; start+=25) {
+            StringRequest sr = getData();
+            rq.add(sr) ;
+        }
+        rq.start();
 
         ListView listView = findViewById(R.id.list1) ;
          adapter = new PicAdapter(this, itemList) ;
          listView.setAdapter(adapter);
     }
-    private void getData(){
-        RequestQueue rq = Volley.newRequestQueue(this) ;
-        StringRequest sr = new StringRequest("https://movie.douban.com/top250",
+    private StringRequest getData(){
+        String url ;
+        if(0== start ) url = "https://movie.douban.com/top250" ;
+        else url = "https://movie.douban.com/top250?start="+start+"&filter=" ;
+        StringRequest sr = new StringRequest(url ,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String s) {
                         Pattern p=Pattern.compile("<img width(.*?)>");
+                        Pattern q=Pattern.compile(" <span class=\"inq\">(.*?)</span>") ;
                         Matcher m=p.matcher(s);
+                        Matcher n=q.matcher(s) ;
                         int j = 0 ;
-                        while(m.find()&& j< 25)  {
-                            str[j++] = m.group() ;
+                        while(m.find()&& n.find() && j< 25)  {
+                            str[j] = m.group() ;
+                            quote[j++]= n.group() ;
                         }
                         for(int i = 0; i< 25; i++){
-                            if(!TextUtils.isEmpty( str[i] )) {
                                 String[] splits = str[i].split("\"");
                                 imgList[i] = splits[5];
-                                nameList[i] = splits[3];
+                                nameList[i] = count++ +"."+splits[3]+"\n"+quote[i].split("<(.*?)>")[1];
                                 Log.i("html----", imgList[i]+" "+nameList[i]) ;
-                            }
                         }
 
                         for(int i = 0; i< nameList.length; i++){
@@ -79,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
                         Log.i("main----","errorListening----") ;
                     }
                 }) ;
-        rq.add(sr) ;
-
+        return sr;
     }
 }
