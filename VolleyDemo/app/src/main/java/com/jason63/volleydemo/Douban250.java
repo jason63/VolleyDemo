@@ -3,6 +3,7 @@ package com.jason63.volleydemo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ListView;
 
@@ -29,6 +30,10 @@ public class Douban250 extends Activity {
     String[] str = new String[25] ;
     String[] quote = new String[25] ;
     String[] title = new String[25] ;
+    final String QUOTE = " <span class=\"inq\">(.*?)</span>" ;
+    final String BOOK_IMG="<img src=(.*?)width=\"90\" />" ;
+    final String BOOK_TITLE="&#34; title=\"(.*?)\"" ;
+    final String MOVIE_STRING ="<img width(.*?)>" ;
     PicAdapter adapter ;
     ArrayList<Item> itemList ;
     int start ;
@@ -56,29 +61,13 @@ public class Douban250 extends Activity {
     private StringRequest getData(){
         String url ;
         StringRequest sr ;
-        if(type.equals("movie")){
-        if(0== start ) url = "https://movie.douban.com/top250" ;
-        else url = "https://movie.douban.com/top250?start="+start+"&filter=" ;
+        if(0== start ) url = "https://"+type+".douban.com/top250" ;
+        else url = "https://"+type+".douban.com/top250?start="+start+"&filter=" ;
         sr = new StringRequest(url ,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String s) {
-                        Pattern p=Pattern.compile("<img width(.*?)>");
-                        Pattern q=Pattern.compile(" <span class=\"inq\">(.*?)</span>") ;
-                        Matcher m=p.matcher(s);
-                        Matcher n=q.matcher(s) ;
-                        int j = 0 ;
-                        while(m.find()&& n.find() && j< 25)  {
-                            str[j] = m.group() ;
-                            quote[j++]= n.group() ;
-                        }
-                        for(int i = 0; i< 25; i++){
-                            String[] splits = str[i].split("\"");
-                            imgList[i] = splits[5];
-                            nameList[i] = count++ +"."+splits[3]+"\n"+quote[i].split("<(.*?)>")[1];
-//                            Log.i("html----", imgList[i]+" "+nameList[i]) ;
-                        }
-
+                        doWithResponse(s);
                         for(int i = 0; i< nameList.length; i++){
                             Item item = new Item(nameList[i], imgList[i]) ;
                             itemList.add(item) ;
@@ -91,47 +80,41 @@ public class Douban250 extends Activity {
                     public void onErrorResponse(VolleyError volleyError) {
                         Log.i("main----","errorListening----") ;
                     }
-                }) ;}
-                else{
-            if(0== start ) url = "https://book.douban.com/top250" ;
-            else url = "https://book.douban.com/top250?start="+start+"&filter=" ;
-            sr = new StringRequest(url ,
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String s) {
-                            Pattern t=Pattern.compile("&#34; title=\"(.*?)\"") ;
-                            Pattern p=Pattern.compile("<img src=(.*?)width=\"90\" />");
-                            Pattern q=Pattern.compile(" <span class=\"inq\">(.*?)</span>") ;
-                            Matcher tt=t.matcher(s) ;
-                            Matcher m=p.matcher(s) ;
-                            Matcher n=q.matcher(s) ;
-                            int j = 0 ;
-                            while(m.find()&& n.find()&&tt.find() && j< 25)  {
-                                str[j] = m.group() ;
-                                quote[j]= n.group() ;
-                                title[j++] = tt.group() ;
-//                                Log.i("book----", str[j-1]+quote[j-1]+title[j-1]) ;
-                            }
-                            for(int i = 0; i< 25; i++){
-                                imgList[i] = str[i].split("\"")[1];
-                                nameList[i] = count++ +"."+title[i].split("\"")[1]+"\n"+quote[i].split("<(.*?)>")[1];
-//                                Log.i("html----", imgList[i]+" "+nameList[i]) ;
-                            }
+                }) ;
 
-                            for(int i = 0; i< nameList.length; i++){
-                                Item item = new Item(nameList[i], imgList[i]) ;
-                                itemList.add(item) ;
-                            }
-                            adapter.notifyDataSetChanged();
-                        }
-                    },
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError volleyError) {
-                            Log.i("main----","errorListening----") ;
-                        }
-                    }) ;
-        }
         return sr;
     }
+   private void doWithResponse(String s) {
+       if (type.equals("movie")) {
+           str = matchPattern(MOVIE_STRING, s) ;
+           quote = matchPattern(QUOTE, s);
+
+           for (int i = 0; i < 25; i++) {
+               String[] splits = str[i].split("\"");
+               imgList[i] = splits[5];
+               nameList[i] = count++ + "." + splits[3] + "\n" + quote[i].split("<(.*?)>")[1];
+           }
+       } else {
+           str = matchPattern(BOOK_IMG, s);
+           quote = matchPattern(QUOTE, s);
+           title = matchPattern(BOOK_TITLE, s);
+
+           for (int i = 0; i < 25; i++) {
+               imgList[i] = str[i].split("\"")[1];
+               String pinjia = TextUtils.isEmpty(quote[i])? "豆瓣没有精选评论哦~~": quote[i].split("<(.*?)>")[1] ;
+               nameList[i] = count++ + "." + title[i].split("\"")[1] + "\n" + pinjia;
+           }
+       }
+   }
+   private String[] matchPattern(String p, String s){
+        Pattern t = Pattern.compile(p) ;
+        Matcher tt = t.matcher(s) ;
+        int j = 0 ;
+        String[] temp = new String[25] ;
+        while(tt.find() && j<25){
+            temp[j++] = tt.group() ;
+            Log.i("match",p+", "+temp[j-1]) ;
+        }
+        return temp ;
+   }
 }
