@@ -30,10 +30,16 @@ public class Douban250 extends Activity {
     String[] str = new String[25] ;
     String[] quote = new String[25] ;
     String[] title = new String[25] ;
+    String[] rating = new String[25] ;
+    String[] rateNum = new String[25] ;
+    String[] detail = new String[25] ;
     final String QUOTE = " <span class=\"inq\">(.*?)</span>" ;
     final String BOOK_IMG="<img src=(.*?)width=\"90\" />" ;
     final String BOOK_TITLE="&#34; title=\"(.*?)\"" ;
     final String MOVIE_STRING ="<img width(.*?)>" ;
+    final String RATE_NUM=" <span>(.*?)人评价" ;
+    final String RATING = " <span class=\"rating_num\" property=\"v:average\">(.*?)</span>" ;
+    final String DETAIL = "导演((.|\n|\n\r)*?)</p>" ;
     PicAdapter adapter ;
     ArrayList<Item> itemList ;
     int start ;
@@ -88,11 +94,19 @@ public class Douban250 extends Activity {
        if (type.equals("movie")) {
            str = matchPattern(MOVIE_STRING, s) ;
            quote = matchPattern(QUOTE, s);
-
+           rating = matchPattern(RATING,s) ;
+           rateNum = matchPattern(RATE_NUM, s) ;
+           detail = matchPattern(DETAIL, s) ;
            for (int i = 0; i < 25; i++) {
                String[] splits = str[i].split("\"");
                imgList[i] = splits[5];
-               nameList[i] = count++ + "." + splits[3] + "\n" + quote[i].split("<(.*?)>")[1];
+               nameList[i] = count++ + "." + splits[3]
+                       + "\n\n" + detail[i].split("<(.*?)>")[0].replaceAll("&nbsp;", " ")
+                       + "\n" + detail[i].split("<(.*?)>")[1].replaceAll("&nbsp;", " ").replaceAll("                            ","")
+                       + "\n" + rating[i].split("<(.*?)>")[1]+"分"
+                       + " " + rateNum[i].split(">")[1]
+                       + "\n\n“" + quote[i].split("<(.*?)>")[1]+"”";
+
            }
        } else {
            str = matchPattern(BOOK_IMG, s);
