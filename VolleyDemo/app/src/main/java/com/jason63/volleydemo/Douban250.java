@@ -40,6 +40,7 @@ public class Douban250 extends Activity {
     final String RATE_NUM=" <span>(.*?)人评价" ;
     final String RATING = " <span class=\"rating_num\" property=\"v:average\">(.*?)</span>" ;
     final String DETAIL = "导演((.|\n|\n\r)*?)</p>" ;
+    final String MUSIC = "<img src=\"(.*?)style=" ;
     PicAdapter adapter ;
     ArrayList<Item> itemList ;
     int start ;
@@ -108,7 +109,7 @@ public class Douban250 extends Activity {
                        + "\n\n“" + quote[i].split("<(.*?)>")[1]+"”";
 
            }
-       } else {
+       } else if(type.equals("book")){
            str = matchPattern(BOOK_IMG, s);
            quote = matchPattern(QUOTE, s);
            title = matchPattern(BOOK_TITLE, s);
@@ -117,6 +118,13 @@ public class Douban250 extends Activity {
                imgList[i] = str[i].split("\"")[1];
                String pinjia = TextUtils.isEmpty(quote[i])? "豆瓣没有精选评论哦~~": quote[i].split("<(.*?)>")[1] ;
                nameList[i] = count++ + "." + title[i].split("\"")[1] + "\n" + pinjia;
+           }
+       }
+       else if(type.equals("music")){
+           str = matchPattern(MUSIC, s);
+           for (int i = 0; i < 25; i++) {
+               imgList[i] = str[i].split("\"")[1];
+               nameList[i] = count++ + "." + str[i].split("\"")[3] ;
            }
        }
    }
