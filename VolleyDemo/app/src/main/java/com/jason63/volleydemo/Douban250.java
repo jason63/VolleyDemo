@@ -1,6 +1,7 @@
 package com.jason63.volleydemo;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ListView;
@@ -27,14 +28,19 @@ public class Douban250 extends Activity {
 //    } ;
     String[] str = new String[25] ;
     String[] quote = new String[25] ;
+    String[] title = new String[25] ;
     PicAdapter adapter ;
     ArrayList<Item> itemList ;
     int start ;
     int count = 1 ;
+    String type ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.top250);
+        Intent intent = getIntent() ;
+        type = intent.getStringExtra("type") ;
+
         itemList = new ArrayList<>() ;
         RequestQueue rq = Volley.newRequestQueue(this) ;
         for(start = 0; start< 249; start+=25) {
@@ -49,9 +55,11 @@ public class Douban250 extends Activity {
     }
     private StringRequest getData(){
         String url ;
+        StringRequest sr ;
+        if(type.equals("movie")){
         if(0== start ) url = "https://movie.douban.com/top250" ;
         else url = "https://movie.douban.com/top250?start="+start+"&filter=" ;
-        StringRequest sr = new StringRequest(url ,
+        sr = new StringRequest(url ,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String s) {
@@ -68,7 +76,7 @@ public class Douban250 extends Activity {
                             String[] splits = str[i].split("\"");
                             imgList[i] = splits[5];
                             nameList[i] = count++ +"."+splits[3]+"\n"+quote[i].split("<(.*?)>")[1];
-                            Log.i("html----", imgList[i]+" "+nameList[i]) ;
+//                            Log.i("html----", imgList[i]+" "+nameList[i]) ;
                         }
 
                         for(int i = 0; i< nameList.length; i++){
@@ -83,7 +91,47 @@ public class Douban250 extends Activity {
                     public void onErrorResponse(VolleyError volleyError) {
                         Log.i("main----","errorListening----") ;
                     }
-                }) ;
+                }) ;}
+                else{
+            if(0== start ) url = "https://book.douban.com/top250" ;
+            else url = "https://book.douban.com/top250?start="+start+"&filter=" ;
+            sr = new StringRequest(url ,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String s) {
+                            Pattern t=Pattern.compile("&#34; title=\"(.*?)\"") ;
+                            Pattern p=Pattern.compile("<img src=(.*?)width=\"90\" />");
+                            Pattern q=Pattern.compile(" <span class=\"inq\">(.*?)</span>") ;
+                            Matcher tt=t.matcher(s) ;
+                            Matcher m=p.matcher(s) ;
+                            Matcher n=q.matcher(s) ;
+                            int j = 0 ;
+                            while(m.find()&& n.find()&&tt.find() && j< 25)  {
+                                str[j] = m.group() ;
+                                quote[j]= n.group() ;
+                                title[j++] = tt.group() ;
+//                                Log.i("book----", str[j-1]+quote[j-1]+title[j-1]) ;
+                            }
+                            for(int i = 0; i< 25; i++){
+                                imgList[i] = str[i].split("\"")[1];
+                                nameList[i] = count++ +"."+title[i].split("\"")[1]+"\n"+quote[i].split("<(.*?)>")[1];
+//                                Log.i("html----", imgList[i]+" "+nameList[i]) ;
+                            }
+
+                            for(int i = 0; i< nameList.length; i++){
+                                Item item = new Item(nameList[i], imgList[i]) ;
+                                itemList.add(item) ;
+                            }
+                            adapter.notifyDataSetChanged();
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError volleyError) {
+                            Log.i("main----","errorListening----") ;
+                        }
+                    }) ;
+        }
         return sr;
     }
 }

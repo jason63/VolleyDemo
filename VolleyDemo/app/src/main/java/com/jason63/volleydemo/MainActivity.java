@@ -34,10 +34,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button top250 = findViewById(R.id.top250) ;
+        Button book = findViewById(R.id.book250) ;
         top250.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, Douban250.class) ;
+                intent.putExtra("type","movie") ;
+                startActivity(intent);
+            }
+        });
+        book.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, Douban250.class) ;
+                intent.putExtra("type","book") ;
                 startActivity(intent);
             }
         });
