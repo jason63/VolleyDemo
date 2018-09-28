@@ -27,38 +27,37 @@ import java.util.regex.Pattern;
 
 import okhttp3.OkHttpClient;
 
-public class MainActivity extends AppCompatActivity {
-
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+    Button top250, book, music ;
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState)  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Button top250 = findViewById(R.id.top250) ;
-        Button book = findViewById(R.id.book250) ;
-        Button music = findViewById(R.id.music250) ;
-        top250.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, Douban250.class) ;
-                intent.putExtra("type","movie") ;
-                startActivity(intent);
-            }
-        });
-        book.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, Douban250.class) ;
-                intent.putExtra("type","book") ;
-                startActivity(intent);
-            }
-        });
-        music.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, Douban250.class) ;
-                intent.putExtra("type","music") ;
-                startActivity(intent);
-            }
-        });
+        top250 = findViewById(R.id.top250) ;
+        book = findViewById(R.id.book250) ;
+        music = findViewById(R.id.music250) ;
+        top250.setOnClickListener(this);
+        book.setOnClickListener(this);
+        music.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.top250:
+                startIntent("movie");
+                break ;
+            case R.id.book250:
+                startIntent("book");
+                break ;
+            case R.id.music250:
+                startIntent("music");
+                break ;
+        }
+    }
+    private void startIntent(String s){
+        Intent intent = new Intent(MainActivity.this, Douban250.class) ;
+        intent.putExtra("type",s) ;
+        startActivity(intent);
     }
 }
